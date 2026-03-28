@@ -36,7 +36,7 @@ def design_autogen(
         row = []
         for x in range(width):
             c = maze.cell(x, y)
-            row.append([int(c.n), int(c.e), int(c.s), int(c.w))])
+            row.append([int(c.n), int(c.e), int(c.s), int(c.w)])
         grid.append(row)
     data = {
         "version": 1,
