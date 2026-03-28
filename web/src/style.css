@@ -1,0 +1,111 @@
+:root {
+  --ii-blue: #1040c0;
+  --ii-bg: #0a0a12;
+  --ii-fg: #c0c8e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ii-bg);
+  color: var(--ii-fg);
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 16px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.paused {
+  text-align: center;
+  padding: 0.5rem;
+  background: #602020;
+  color: #fff;
+  font-weight: bold;
+}
+
+.panel {
+  max-width: 42rem;
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 1px solid #333;
+}
+
+#game {
+  max-width: 36rem;
+  margin: 1rem auto;
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.frame-mid {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.wall-bar {
+  color: #fff;
+  background: var(--ii-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.wall-h {
+  min-width: 12rem;
+  min-height: 1.75rem;
+}
+
+.wall-v {
+  min-width: 2.5rem;
+  min-height: 8rem;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.center {
+  min-width: 10rem;
+  min-height: 8rem;
+  padding: 0.5rem;
+  border: 1px dashed #333;
+  text-align: center;
+}
+
+#heard {
+  margin-top: 0.75rem;
+  font-size: 14px;
+  min-height: 2rem;
+}
+
+.actions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.actions button:disabled {
+  opacity: 0.4;
+}
+
+.pace {
+  margin-top: 0.5rem;
+  font-size: 13px;
+}
+
+label {
+  margin-right: 0.75rem;
+}

@@ -1,0 +1,29 @@
+version: 1
+width: 5
+height: 5
+player_spawn: [1, 1]
+player_facing: north
+exit: [3, 3]
+
+player_briefing:
+  welcome: "Welcome to Dark Maze!"
+  goals: "Blindfolded, you must make your way to the maze exit before being eaten by a monster!"
+  commands_help: |
+    Turn left/right — no time cost.
+    Forward — move one cell; pace changes time (K) and stealth.
+    Wait — listen (bonus); costs 3 time steps like slow movement.
+    There is no backward move.
+
+monster_types:
+  skeleton:
+    phrases: ["rattle", "dry scrape", "clatter"]
+    maze_proficiency: 0.2
+    sound_homing: 0.85
+
+monsters:
+  - id: skel1
+    type: skeleton
+    cell: [3, 2]
+    facing: south
+    perception_bonus: 0
+    stealth_bonus: 2

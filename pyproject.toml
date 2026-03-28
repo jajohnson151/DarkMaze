@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "darkmaze"
+version = "0.1.0"
+description = "Dark Maze game server"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.0",
+    "pyyaml>=6.0.1",
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4.0", "httpx>=0.26.0", "ruff>=0.1.0"]
+
+[project.scripts]
+darkmaze = "cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["game", "server", "cli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

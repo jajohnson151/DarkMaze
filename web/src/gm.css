@@ -1,0 +1,26 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 1rem;
+  background: #1a1a24;
+  color: #ddd;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+button {
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+pre#log {
+  background: #0d0d12;
+  padding: 1rem;
+  overflow: auto;
+  max-height: 70vh;
+  font-size: 12px;
+}

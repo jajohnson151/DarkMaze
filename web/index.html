@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dark Maze — Player</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="paused-banner" class="paused hidden">Paused</div>
+      <div id="waiting" class="panel hidden"></div>
+      <div id="onboarding" class="panel hidden"></div>
+      <div id="stats" class="panel hidden">
+        <h2>Character</h2>
+        <label>Perception bonus <input type="number" id="per" value="2" /></label>
+        <label>Stealth bonus <input type="number" id="ste" value="1" /></label>
+        <button type="button" id="stats-go">Continue</button>
+      </div>
+      <div id="game" class="hidden">
+        <div class="frame">
+          <div id="w-top" class="wall-bar wall-h hidden"></div>
+          <div class="frame-mid">
+            <div id="w-left" class="wall-bar wall-v hidden"></div>
+            <div id="center" class="center"></div>
+            <div id="w-right" class="wall-bar wall-v hidden"></div>
+          </div>
+          <div id="w-bot" class="wall-bar wall-h hidden"></div>
+        </div>
+        <div id="heard"></div>
+        <div class="actions">
+          <button type="button" data-act="turn_left">Turn L</button>
+          <button type="button" data-act="forward">Forward</button>
+          <button type="button" data-act="turn_right">Turn R</button>
+          <button type="button" data-act="wait">Wait</button>
+        </div>
+        <div class="pace">
+          <label
+            ><input type="radio" name="pace" value="cautious" /> cautious</label
+          >
+          <label
+            ><input type="radio" name="pace" value="normal" checked /> normal</label
+          >
+          <label><input type="radio" name="pace" value="fast" /> fast</label>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

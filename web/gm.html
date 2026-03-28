@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dark Maze — GM</title>
+    <link rel="stylesheet" href="/src/gm.css" />
+  </head>
+  <body>
+    <div id="gm-app">
+      <h1>GM</h1>
+      <p>Session <code>default</code> — WebSocket to port 8000</p>
+      <div class="row">
+        <button type="button" id="btn-start">Play start</button>
+        <button type="button" id="btn-stop">Play stop (design)</button>
+        <button type="button" id="btn-pause">Pause</button>
+        <button type="button" id="btn-resume">Resume</button>
+      </div>
+      <pre id="log"></pre>
+    </div>
+    <script type="module" src="/src/gm.ts"></script>
+  </body>
+</html>
