@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Literal
 
@@ -64,6 +64,9 @@ class GMView(BaseModel):
     paused: bool = False
     width: int
     height: int
+    """Per-cell wall data and optional hazard/item/exit; same shape as YAML grid."""
+    grid: list[list[dict[str, Any]]] = Field(default_factory=list)
+    monster_types: dict[str, dict[str, Any]] = Field(default_factory=dict, alias="monsterTypes")
     player: dict[str, Any]
     monsters: list[GMMonsterView]
     exit_cell: tuple[int, int] = Field(alias="exitCell")

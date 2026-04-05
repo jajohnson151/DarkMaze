@@ -98,8 +98,35 @@ function escapeHtml(s: string) {
     .replace(/"/g, "&quot;");
 }
 
+let playerWs: WebSocket | null = null;
+
+function currentPace(): string {
+  return (
+    (document.querySelector('input[name="pace"]:checked') as HTMLInputElement)
+      ?.value ?? "normal"
+  );
+}
+
+function sendPlayerAction(kind: string) {
+  if (!playerWs || playerWs.readyState !== WebSocket.OPEN) return;
+  playerWs.send(
+    JSON.stringify({
+      type: "player.action",
+      kind,
+      pace: currentPace(),
+    }),
+  );
+}
+
+function isTypingTarget(t: EventTarget | null): boolean {
+  if (!t || !(t instanceof HTMLElement)) return false;
+  const tag = t.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t.isContentEditable;
+}
+
 function connect() {
   const ws = new WebSocket(WS_URL);
+  playerWs = ws;
   ws.onopen = () => {
     ws.send(JSON.stringify({ type: "hello", role: "player" }));
   };
@@ -139,11 +166,33 @@ function connect() {
   document.querySelectorAll(".actions button").forEach((btn) => {
     btn.addEventListener("click", () => {
       const act = (btn as HTMLElement).dataset.act;
-      const pace = (
-        document.querySelector('input[name="pace"]:checked') as HTMLInputElement
-      )?.value ?? "normal";
-      ws.send(JSON.stringify({ type: "player.action", kind: act, pace }));
+      if (act) sendPlayerAction(act);
     });
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (isTypingTarget(e.target)) return;
+    const key = e.key;
+    if (key === " " || key === "Spacebar") {
+      e.preventDefault();
+      sendPlayerAction("wait");
+      return;
+    }
+    if (key === "w" || key === "W" || key === "ArrowUp") {
+      e.preventDefault();
+      sendPlayerAction("forward");
+      return;
+    }
+    if (key === "a" || key === "A" || key === "ArrowLeft") {
+      e.preventDefault();
+      sendPlayerAction("turn_left");
+      return;
+    }
+    if (key === "d" || key === "D" || key === "ArrowRight") {
+      e.preventDefault();
+      sendPlayerAction("turn_right");
+      return;
+    }
   });
 }
 

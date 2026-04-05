@@ -117,8 +117,45 @@ def build_tuning(data: dict[str, Any]) -> TuningConfig:
     return TuningConfig.model_validate(t)
 
 
-def validate_template(path: Path | str) -> None:
-    data = load_template(path)
+def maze_to_template_grid(maze: Maze) -> list[list[dict[str, Any]]]:
+    """Serialize maze cells to YAML-style dict grid (ints 0/1 for walls)."""
+    grid: list[list[dict[str, Any]]] = []
+    for y in range(maze.height):
+        row: list[dict[str, Any]] = []
+        for x in range(maze.width):
+            c = maze.cell(x, y)
+            cell: dict[str, Any] = {
+                "n": int(c.n),
+                "e": int(c.e),
+                "s": int(c.s),
+                "w": int(c.w),
+            }
+            if c.hazard:
+                cell["hazard"] = c.hazard
+            if c.item:
+                cell["item"] = c.item
+            if c.is_exit:
+                cell["exit"] = True
+            row.append(cell)
+        grid.append(row)
+    return grid
+
+
+def minimal_template_dict(width: int, height: int) -> dict[str, Any]:
+    """Defaults for a new playable template: spawn NW, exit SE."""
+    return {
+        "version": 1,
+        "width": width,
+        "height": height,
+        "player_spawn": [0, 0],
+        "player_facing": "east",
+        "exit": [max(0, width - 1), max(0, height - 1)],
+        "monster_types": {},
+        "monsters": [],
+    }
+
+
+def validate_template_data(data: dict[str, Any]) -> None:
     for key in ("width", "height", "player_spawn", "exit"):
         if key not in data:
             raise ValueError(f"missing required key: {key}")
@@ -131,3 +168,8 @@ def validate_template(path: Path | str) -> None:
     for m in monsters:
         if m.monster_type_id not in (data.get("monster_types") or {}):
             raise ValueError(f"monster {m.id} unknown type {m.monster_type_id}")
+
+
+def validate_template(path: Path | str) -> None:
+    data = load_template(path)
+    validate_template_data(data)

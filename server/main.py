@@ -111,6 +111,73 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
                     )
                 continue
 
+            if mtype == "gm.design.apply_template":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                tmpl = msg.get("template")
+                if not isinstance(tmpl, dict):
+                    await _send(
+                        websocket,
+                        {
+                            "type": "error",
+                            "protocol": PROTOCOL_VERSION,
+                            "message": "template must be an object",
+                        },
+                    )
+                    continue
+                try:
+                    sessions.apply_template_dict(session_id, tmpl)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {
+                            "type": "error",
+                            "protocol": PROTOCOL_VERSION,
+                            "message": str(e),
+                        },
+                    )
+                continue
+
+            if mtype == "gm.design.generate_maze":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    width = int(msg["width"])
+                    height = int(msg["height"])
+                    algorithm = str(msg.get("algorithm", "recursive_backtracker"))
+                    raw_seed = msg.get("seed")
+                    seed = int(raw_seed) if raw_seed is not None else None
+                    sessions.generate_maze_design(session_id, width, height, algorithm, seed)
+                    await _broadcast_session(session_id)
+                except (KeyError, ValueError) as e:
+                    await _send(
+                        websocket,
+                        {
+                            "type": "error",
+                            "protocol": PROTOCOL_VERSION,
+                            "message": str(e),
+                        },
+                    )
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {
+                            "type": "error",
+                            "protocol": PROTOCOL_VERSION,
+                            "message": str(e),
+                        },
+                    )
+                continue
+
             st = sess.state
             if st is None:
                 await _send(

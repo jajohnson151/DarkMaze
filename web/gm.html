@@ -9,14 +9,73 @@
   <body>
     <div id="gm-app">
       <h1>GM</h1>
-      <p>Session <code>default</code> — WebSocket to port 8000</p>
-      <div class="row">
-        <button type="button" id="btn-start">Play start</button>
-        <button type="button" id="btn-stop">Play stop (design)</button>
-        <button type="button" id="btn-pause">Pause</button>
-        <button type="button" id="btn-resume">Resume</button>
-      </div>
-      <pre id="log"></pre>
+      <nav class="gm-nav" aria-label="GM views">
+        <button type="button" class="gm-nav-btn gm-nav-btn--active" data-view="home" id="nav-home" aria-current="page">
+          Home
+        </button>
+        <button type="button" class="gm-nav-btn" data-view="maze" id="nav-maze">Maze editor</button>
+        <button type="button" class="gm-nav-btn" data-view="monsters" id="nav-monsters">Monster types</button>
+      </nav>
+
+      <section id="view-home" class="view" aria-hidden="false">
+        <p>Session <code>default</code> — WebSocket to port 8000</p>
+        <div class="row">
+          <button type="button" id="btn-start">Play start</button>
+          <button type="button" id="btn-stop">Play stop (design)</button>
+          <button type="button" id="btn-pause">Pause</button>
+          <button type="button" id="btn-resume">Resume</button>
+        </div>
+        <p id="design-status" class="design-status" aria-live="polite"></p>
+        <details class="log-details">
+          <summary>Raw GM state (JSON)</summary>
+          <pre id="log"></pre>
+        </details>
+      </section>
+
+      <section id="view-maze" class="view view--hidden" hidden aria-hidden="true">
+        <p id="maze-play-notice" class="play-notice" hidden>Stop play to edit.</p>
+        <div id="maze-editable" class="view-body">
+          <h2>Maze editor</h2>
+          <p class="hint">
+            Click near a wall segment to toggle it (shared edges stay consistent). <strong>P</strong> spawn,
+            <strong>E</strong> exit, <strong>M</strong> monsters are shown read-only.
+          </p>
+          <div class="maze-canvas-wrap">
+            <canvas id="maze-canvas" width="400" height="300" aria-label="Maze wall editor"></canvas>
+          </div>
+          <div class="maze-actions row">
+            <button type="button" id="btn-apply-maze">Apply template to server</button>
+          </div>
+          <p id="maze-status" class="design-status" aria-live="polite"></p>
+          <fieldset class="maze-generate">
+            <legend>Generate new maze</legend>
+            <p class="hint">Replaces the session template with a procedurally generated maze (default spawn/exit).</p>
+            <label>Width <input type="number" id="maze-gen-w" min="2" max="80" value="8" /></label>
+            <label>Height <input type="number" id="maze-gen-h" min="2" max="80" value="8" /></label>
+            <label>Seed (optional) <input type="number" id="maze-gen-seed" placeholder="random" /></label>
+            <label
+              >Algorithm
+              <select id="maze-gen-algo">
+                <option value="recursive_backtracker" selected>recursive_backtracker</option>
+              </select>
+            </label>
+            <button type="button" id="btn-maze-generate">Generate</button>
+          </fieldset>
+        </div>
+      </section>
+
+      <section id="view-monsters" class="view view--hidden" hidden aria-hidden="true">
+        <p id="monsters-play-notice" class="play-notice" hidden>Stop play to edit.</p>
+        <div id="monsters-editable" class="view-body">
+          <h2>Design — monster types</h2>
+          <p class="hint">
+            Edit types below, then <strong>Apply template</strong>. Types must exist for each monster’s
+            <code>type</code> in the loaded maze.
+          </p>
+          <div id="monster-types-root"></div>
+          <button type="button" id="btn-apply-template">Apply template to server</button>
+        </div>
+      </section>
     </div>
     <script type="module" src="/src/gm.ts"></script>
   </body>

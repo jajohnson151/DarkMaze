@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 from dataclasses import dataclass, field
 from game.acoustics import (
     hearing_contest,
@@ -19,7 +20,14 @@ from game.protocol_models import (
     SessionMode,
     WallMask,
 )
-from game.template_io import build_actors, build_briefing, build_maze_from_template, build_monster_types, build_tuning
+from game.template_io import (
+    build_actors,
+    build_briefing,
+    build_maze_from_template,
+    build_monster_types,
+    build_tuning,
+    maze_to_template_grid,
+)
 from game.tuning import TuningConfig, k_for_player_forward, k_for_player_wait
 
 
@@ -321,11 +329,20 @@ def build_player_view(state: PlayState) -> PlayerView:
 
 def build_gm_view(state: PlayState) -> GMView:
     sm: SessionMode = "play" if state.mode == "play" else "design"
+    mt_payload: dict[str, dict[str, Any]] = {}
+    for tid, mt in state.monster_types.items():
+        mt_payload[tid] = {
+            "phrases": list(mt.phrases),
+            "maze_proficiency": mt.maze_proficiency,
+            "sound_homing": mt.sound_homing,
+        }
     return GMView(
         sessionMode=sm,
         paused=state.paused,
         width=state.maze.width,
         height=state.maze.height,
+        grid=maze_to_template_grid(state.maze),
+        monsterTypes=mt_payload,
         player={"x": state.player.x, "y": state.player.y, "facing": state.player.facing},
         monsters=[
             GMMonsterView(
@@ -341,5 +358,47 @@ def build_gm_view(state: PlayState) -> GMView:
         exitCell=state.exit_cell,
         lastHearDebug=list(state.last_hear_debug),
     )
+
+
+def play_state_to_template_dict(state: PlayState) -> dict[str, Any]:
+    """Round-trip current play state to a template dict for persistence / play start."""
+    data: dict[str, Any] = {
+        "version": 1,
+        "width": state.maze.width,
+        "height": state.maze.height,
+        "player_spawn": [state.player.x, state.player.y],
+        "player_facing": state.player.facing,
+        "exit": list(state.exit_cell),
+        "grid": maze_to_template_grid(state.maze),
+        "monster_types": {
+            tid: {
+                "phrases": list(mt.phrases),
+                "maze_proficiency": mt.maze_proficiency,
+                "sound_homing": mt.sound_homing,
+            }
+            for tid, mt in state.monster_types.items()
+        },
+        "monsters": [
+            {
+                "id": m.id,
+                "type": m.monster_type_id,
+                "cell": [m.x, m.y],
+                "facing": m.facing,
+                "perception_bonus": m.perception_bonus,
+                "stealth_bonus": m.stealth_bonus,
+                "perception_roll_mode": m.perception_roll_mode,
+                "stealth_roll_mode": m.stealth_roll_mode,
+            }
+            for m in state.monsters
+        ],
+    }
+    if state.briefing:
+        data["player_briefing"] = {
+            "welcome": state.briefing.welcome,
+            "goals": state.briefing.goals,
+            "commands_help": state.briefing.commands_help,
+        }
+    data["tuning"] = state.tuning.model_dump()
+    return data
 
 

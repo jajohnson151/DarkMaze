@@ -1,4 +1,4 @@
-﻿"""Rectangular grid maze with N/E/S/W walls per cell."""
+"""Rectangular grid maze with N/E/S/W walls per cell."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -50,6 +50,14 @@ class Maze:
                 e = outer_walls and x == width - 1
                 row.append(Cell(n=n, e=e, s=s, w=w))
             cells.append(row)
+        return Maze(width, height, cells)
+
+    @staticmethod
+    def all_walls(width: int, height: int) -> Maze:
+        """Every cell has all four walls true (isolated rooms)."""
+        cells: list[list[Cell]] = [
+            [Cell(n=True, e=True, s=True, w=True) for _ in range(width)] for _ in range(height)
+        ]
         return Maze(width, height, cells)
 
     def in_bounds(self, x: int, y: int) -> bool:

@@ -21,6 +21,8 @@ npm run dev
 - Player: http://localhost:5173/
 - GM: http://localhost:5173/gm.html
 
+**GM user guide:** [docs/GM_MANUAL.md](docs/GM_MANUAL.md)
+
 CLI:
 
 ```bash
