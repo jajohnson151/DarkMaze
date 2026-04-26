@@ -26,6 +26,42 @@
           <button type="button" id="btn-resume">Resume</button>
         </div>
         <p id="design-status" class="design-status" aria-live="polite"></p>
+        <h3>Monster goals (live)</h3>
+        <div id="monster-goals-root"></div>
+        <h3>Monster mirrors</h3>
+        <p class="hint gm-home-hint">
+          Walls, cell contents, and queued heard cues from each monster’s position and facing (same layout as the
+          player view).
+        </p>
+        <div id="gm-monster-mirrors-root" class="gm-monster-mirrors"></div>
+        <h3>Live maze (read-only)</h3>
+        <p class="hint gm-home-hint">Updates from the server; editable on the Maze tab when play is stopped.</p>
+        <div class="maze-canvas-wrap maze-canvas-wrap--home">
+          <canvas id="maze-canvas-home" width="400" height="300" aria-label="Live maze overview"></canvas>
+        </div>
+        <h3>Player mirror</h3>
+        <div id="gm-player-mirror" class="gm-player-mirror">
+          <div id="gm-paused-banner" class="paused hidden">Paused</div>
+          <div id="gm-waiting" class="panel hidden"></div>
+          <div id="gm-onboarding" class="panel hidden"></div>
+          <div id="gm-stats" class="panel hidden"></div>
+          <div id="gm-game" class="hidden">
+            <div class="frame">
+              <div class="wall-grid" role="img" aria-label="Player surroundings">
+                <div id="gm-corner-nw" class="wall-corner wall-corner-nw" aria-hidden="true"></div>
+                <div id="gm-w-top" class="wall-cell wall-bar wall-h hidden"></div>
+                <div id="gm-corner-ne" class="wall-corner wall-corner-ne" aria-hidden="true"></div>
+                <div id="gm-w-left" class="wall-cell wall-bar wall-v hidden"></div>
+                <div id="gm-center" class="center"></div>
+                <div id="gm-w-right" class="wall-cell wall-bar wall-v hidden"></div>
+                <div id="gm-corner-sw" class="wall-corner wall-corner-sw" aria-hidden="true"></div>
+                <div id="gm-w-bot" class="wall-cell wall-bar wall-h hidden"></div>
+                <div id="gm-corner-se" class="wall-corner wall-corner-se" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div id="gm-heard"></div>
+          </div>
+        </div>
         <details class="log-details">
           <summary>Raw GM state (JSON)</summary>
           <pre id="log"></pre>
@@ -37,30 +73,92 @@
         <div id="maze-editable" class="view-body">
           <h2>Maze editor</h2>
           <p class="hint">
-            Click near a wall segment to toggle it (shared edges stay consistent). <strong>P</strong> spawn,
-            <strong>E</strong> exit, <strong>M</strong> monsters are shown read-only.
+            Choose a mode, then click/drag on the grid. Wall mode supports drag painting (left=open, right/ctrl=close).
           </p>
-          <div class="maze-canvas-wrap">
-            <canvas id="maze-canvas" width="400" height="300" aria-label="Maze wall editor"></canvas>
-          </div>
-          <div class="maze-actions row">
-            <button type="button" id="btn-apply-maze">Apply template to server</button>
-          </div>
-          <p id="maze-status" class="design-status" aria-live="polite"></p>
-          <fieldset class="maze-generate">
-            <legend>Generate new maze</legend>
-            <p class="hint">Replaces the session template with a procedurally generated maze (default spawn/exit).</p>
-            <label>Width <input type="number" id="maze-gen-w" min="2" max="80" value="8" /></label>
-            <label>Height <input type="number" id="maze-gen-h" min="2" max="80" value="8" /></label>
-            <label>Seed (optional) <input type="number" id="maze-gen-seed" placeholder="random" /></label>
+          <fieldset class="maze-mode">
+            <legend>Edit mode</legend>
             <label
-              >Algorithm
-              <select id="maze-gen-algo">
-                <option value="recursive_backtracker" selected>recursive_backtracker</option>
+              >Mode
+              <select id="maze-mode">
+                <option value="walls" selected>walls</option>
+                <option value="spawn">spawn</option>
+                <option value="exit">exit</option>
+                <option value="surface">surface</option>
+                <option value="room_poi">room POI</option>
+                <option value="edge_poi">edge POI</option>
+                <option value="monster">monster</option>
               </select>
             </label>
-            <button type="button" id="btn-maze-generate">Generate</button>
+            <label
+              >Facing
+              <select id="maze-player-facing">
+                <option value="north">north</option>
+                <option value="east" selected>east</option>
+                <option value="south">south</option>
+                <option value="west">west</option>
+              </select>
+            </label>
           </fieldset>
+          <fieldset id="surface-panel" class="maze-panel">
+            <legend>Surface paint</legend>
+            <label
+              >Surface type
+              <select id="surface-type"></select>
+            </label>
+            <label>New type <input type="text" id="surface-new-type" placeholder="mossy tile" /></label>
+            <label>Noisiness <input type="number" id="surface-noisiness" min="0" value="0" /></label>
+            <button type="button" id="btn-surface-save">Save surface type</button>
+          </fieldset>
+          <fieldset id="poi-panel" class="maze-panel">
+            <legend>POI placement</legend>
+            <label>POI type <input type="text" id="poi-type" placeholder="engraving_wall" /></label>
+            <label>Note <input type="text" id="poi-note" placeholder="optional" /></label>
+          </fieldset>
+          <fieldset id="monster-panel" class="maze-panel">
+            <legend>Add monster (form then place)</legend>
+            <label>ID <input type="text" id="monster-id" placeholder="skel2" /></label>
+            <label
+              >Type
+              <select id="monster-type-select"></select>
+            </label>
+            <label
+              >Facing
+              <select id="monster-facing">
+                <option value="north">north</option>
+                <option value="east">east</option>
+                <option value="south" selected>south</option>
+                <option value="west">west</option>
+              </select>
+            </label>
+            <label>Per bonus <input type="number" id="monster-per" value="0" /></label>
+            <label>Stealth bonus <input type="number" id="monster-ste" value="0" /></label>
+            <button type="button" id="btn-arm-monster">Arm placement</button>
+            <p id="monster-place-status" class="hint"></p>
+          </fieldset>
+          <div id="monster-list-root"></div>
+          <div id="maze-design-lock" class="maze-design-lock">
+            <div class="maze-canvas-wrap">
+              <canvas id="maze-canvas" width="400" height="300" aria-label="Maze wall editor"></canvas>
+            </div>
+            <div class="maze-actions row">
+              <button type="button" id="btn-apply-maze">Apply template to server</button>
+            </div>
+            <p id="maze-status" class="design-status" aria-live="polite"></p>
+            <fieldset class="maze-generate">
+              <legend>Generate new maze</legend>
+              <p class="hint">Replaces the session template with a procedurally generated maze (default spawn/exit).</p>
+              <label>Width <input type="number" id="maze-gen-w" min="2" max="80" value="8" /></label>
+              <label>Height <input type="number" id="maze-gen-h" min="2" max="80" value="8" /></label>
+              <label>Seed (optional) <input type="number" id="maze-gen-seed" placeholder="random" /></label>
+              <label
+                >Algorithm
+                <select id="maze-gen-algo">
+                  <option value="recursive_backtracker" selected>recursive_backtracker</option>
+                </select>
+              </label>
+              <button type="button" id="btn-maze-generate">Generate</button>
+            </fieldset>
+          </div>
         </div>
       </section>
 

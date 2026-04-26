@@ -1,0 +1,13 @@
+poi_types:
+  - id: dip_floor
+    label: Dip in floor
+    applies_to: room
+    description_template: There is a dip in the floor here.
+  - id: cobweb_opening
+    label: Cobweb at opening
+    applies_to: edge
+    description_template: You feel cobwebs hanging from the opening.
+  - id: engraving_wall
+    label: Engravings on wall
+    applies_to: edge
+    description_template: You feel engravings on the wall.

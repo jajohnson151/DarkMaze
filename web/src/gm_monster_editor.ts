@@ -1,5 +1,7 @@
 /** Working template for gm.design.apply_template (snake_case keys). */
 
+import type { MonsterMirrorPayload } from "./player_view_render";
+
 export type MonsterTypeSpec = {
   phrases: string[];
   maze_proficiency: number;
@@ -13,6 +15,8 @@ export type MonsterInstance = {
   facing: string;
   perception_bonus: number;
   stealth_bonus: number;
+  goal_mode?: string;
+  goal_target?: [number, number] | null;
 };
 
 export type WorkingTemplate = {
@@ -25,6 +29,8 @@ export type WorkingTemplate = {
   grid: unknown[][];
   monster_types: Record<string, MonsterTypeSpec>;
   monsters: MonsterInstance[];
+  surface_types?: Record<string, { noisiness?: number }>;
+  edge_pois?: Array<{ x: number; y: number; dir: string; poi_type: string; note?: string }>;
 };
 
 export type GmViewMsg = {
@@ -40,8 +46,12 @@ export type GmViewMsg = {
     y: number;
     facing: string;
     monsterTypeId?: string | null;
+    goalMode?: string;
+    goalTarget?: [number, number] | null;
   }>;
   exitCell: [number, number] | number[];
+  monsterMirrors?: MonsterMirrorPayload[];
+  designTemplate?: Partial<WorkingTemplate> & Record<string, unknown>;
 };
 
 function deepClone<T>(x: T): T {
@@ -49,6 +59,25 @@ function deepClone<T>(x: T): T {
 }
 
 export function gmViewToWorkingTemplate(msg: GmViewMsg): WorkingTemplate {
+  const dt = msg.designTemplate;
+  if (dt && typeof dt === "object") {
+    const fromDesign = dt as WorkingTemplate;
+    if (Array.isArray(fromDesign.grid)) {
+      return deepClone({
+        version: Number(fromDesign.version ?? 1),
+        width: Number(fromDesign.width ?? msg.width),
+        height: Number(fromDesign.height ?? msg.height),
+        player_spawn: (fromDesign.player_spawn ?? [msg.player.x, msg.player.y]) as [number, number],
+        player_facing: String(fromDesign.player_facing ?? msg.player.facing),
+        exit: (fromDesign.exit ?? [Number(msg.exitCell[0]), Number(msg.exitCell[1])]) as [number, number],
+        grid: fromDesign.grid,
+        monster_types: (fromDesign.monster_types ?? {}) as Record<string, MonsterTypeSpec>,
+        monsters: (fromDesign.monsters ?? []) as MonsterInstance[],
+        surface_types: fromDesign.surface_types,
+        edge_pois: fromDesign.edge_pois,
+      });
+    }
+  }
   const mtRaw = msg.monsterTypes ?? {};
   const monster_types: Record<string, MonsterTypeSpec> = {};
   for (const [tid, spec] of Object.entries(mtRaw)) {
@@ -65,6 +94,8 @@ export function gmViewToWorkingTemplate(msg: GmViewMsg): WorkingTemplate {
     facing: m.facing,
     perception_bonus: 0,
     stealth_bonus: 0,
+    goal_mode: m.goalMode ?? "catch_player",
+    goal_target: m.goalTarget ?? null,
   }));
   return {
     version: 1,

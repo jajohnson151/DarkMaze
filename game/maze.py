@@ -29,6 +29,7 @@ class Cell:
     w: bool = True
     hazard: str | None = None
     item: str | None = None
+    surface_type: str | None = None
     is_exit: bool = False
 
 

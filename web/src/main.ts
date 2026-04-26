@@ -3,99 +3,46 @@ const WS_URL = `ws://${window.location.hostname}:8000/ws/${SESSION}`;
 
 let onboardingContinueClicked = false;
 
-type PlayerView = {
-  sessionMode: string;
-  paused: boolean;
-  playerStatsReady: boolean;
-  briefing?: { welcome?: string; goals?: string; commandsHelp?: string };
-  walls: { left: boolean; right: boolean; forward: boolean; behind: boolean };
-  hazard?: string | null;
-  item?: string | null;
-  pendingHeardCues: { relDirection8: number; phrase: string; distanceLabel: string }[];
-  gameOver?: string | null;
-};
+import { renderPlayerView, type PlayerView } from "./player_view_render";
 
 const el = (id: string) => document.getElementById(id)!;
 
-function setWallBar(id: string, show: boolean, text: string) {
-  const n = el(id);
-  if (show) {
-    n.classList.remove("hidden");
-    n.textContent = text;
-  } else {
-    n.classList.add("hidden");
-  }
-}
-
 function renderView(v: PlayerView) {
-  el("paused-banner").classList.toggle("hidden", !v.paused);
-  const gameLocked = v.paused || !v.playerStatsReady || v.sessionMode !== "play";
-  document.querySelectorAll(".actions button").forEach((b) => {
-    (b as HTMLButtonElement).disabled = gameLocked || !!v.gameOver;
-  });
-
-  if (v.sessionMode !== "play") {
-    el("waiting").classList.remove("hidden");
-    el("waiting").textContent = "Waiting for GM to start play…";
-    el("onboarding").classList.add("hidden");
-    el("stats").classList.add("hidden");
-    el("game").classList.add("hidden");
-    return;
-  }
-  el("waiting").classList.add("hidden");
-
-  if (!v.playerStatsReady) {
-    el("game").classList.add("hidden");
-    if (!onboardingContinueClicked) {
-      const ob = el("onboarding");
-      ob.classList.remove("hidden");
-      const b = v.briefing;
-      ob.innerHTML = `
-      <h2>${escapeHtml(b?.welcome ?? "Welcome to Dark Maze!")}</h2>
-      <p>${escapeHtml(b?.goals ?? "")}</p>
-      <pre style="white-space:pre-wrap">${escapeHtml(b?.commandsHelp ?? "")}</pre>
-      <button type="button" id="ob-go">Continue to stats</button>`;
-      el("stats").classList.add("hidden");
-      document.getElementById("ob-go")!.onclick = () => {
-        onboardingContinueClicked = true;
-        ob.classList.add("hidden");
-        el("stats").classList.remove("hidden");
-      };
-    } else {
+  onboardingContinueClicked = renderPlayerView(
+    v,
+    {
+      pausedBanner: el("paused-banner"),
+      waiting: el("waiting"),
+      onboarding: el("onboarding"),
+      stats: el("stats"),
+      game: el("game"),
+      wallTop: el("w-top"),
+      wallBottom: el("w-bot"),
+      wallLeft: el("w-left"),
+      wallRight: el("w-right"),
+      cornerNW: el("corner-nw"),
+      cornerNE: el("corner-ne"),
+      cornerSW: el("corner-sw"),
+      cornerSE: el("corner-se"),
+      center: el("center"),
+      perceptionUpper: el("perception-upper"),
+      perceptionLeft: el("perception-left"),
+      perceptionLower: el("perception-lower"),
+      perceptionRight: el("perception-right"),
+      perceptionUL: el("perception-ul"),
+      perceptionUR: el("perception-ur"),
+      perceptionLL: el("perception-ll"),
+      perceptionLR: el("perception-lr"),
+      selectedStats: el("selected-stats"),
+      actionButtons: Array.from(document.querySelectorAll<HTMLButtonElement>(".actions button")),
+    },
+    onboardingContinueClicked,
+    () => {
+      onboardingContinueClicked = true;
       el("onboarding").classList.add("hidden");
       el("stats").classList.remove("hidden");
-    }
-    return;
-  }
-
-  el("onboarding").classList.add("hidden");
-  el("stats").classList.add("hidden");
-  el("game").classList.remove("hidden");
-
-  setWallBar("w-top", v.walls.forward, "WALL IN FRONT");
-  setWallBar("w-bot", v.walls.behind, "WALL BEHIND");
-  setWallBar("w-left", v.walls.left, "WALL LEFT");
-  setWallBar("w-right", v.walls.right, "WALL RIGHT");
-
-  const c = el("center");
-  c.innerHTML = [v.hazard, v.item].filter(Boolean).join("<br/>") || "—";
-
-  const heard = el("heard");
-  heard.innerHTML = v.pendingHeardCues
-    .map((h) => `${h.distanceLabel} (${h.phrase})`)
-    .join("<br/>");
-
-  if (v.gameOver) {
-    c.innerHTML += `<p><strong>Game over: ${escapeHtml(v.gameOver)}</strong></p>`;
-  }
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    },
+  );
 }
 
 let playerWs: WebSocket | null = null;

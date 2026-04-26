@@ -63,7 +63,10 @@ async def _broadcast_session(session_id: str) -> None:
             pass
     for gws in list(sess.gm_sockets):
         try:
-            await _send(gws, {"type": "state.gm_view", **gv})
+            gm_payload: dict[str, Any] = {"type": "state.gm_view", **gv, "playerView": pv}
+            if st.mode == "design" and isinstance(sess.design_template, dict):
+                gm_payload["designTemplate"] = sess.design_template
+            await _send(gws, gm_payload)
         except Exception:
             pass
 
@@ -105,9 +108,15 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
                             },
                         )
                 elif st:
+                    gm_payload: dict[str, Any] = {
+                        "type": "state.gm_view",
+                        **build_gm_view(st).model_dump(by_alias=True),
+                    }
+                    if st.mode == "design" and isinstance(sess.design_template, dict):
+                        gm_payload["designTemplate"] = sess.design_template
                     await _send(
                         websocket,
-                        {"type": "state.gm_view", **build_gm_view(st).model_dump(by_alias=True)},
+                        gm_payload,
                     )
                 continue
 
@@ -178,6 +187,233 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
                     )
                 continue
 
+            if mtype == "gm.design.set_wall":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    x = int(msg.get("x"))
+                    y = int(msg.get("y"))
+                    direction = str(msg.get("dir", ""))
+                    on = bool(msg.get("on"))
+                    sessions.set_design_wall(session_id, x, y, direction, on)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.set_spawn":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    x = int(msg.get("x"))
+                    y = int(msg.get("y"))
+                    facing = msg.get("facing")
+                    sessions.set_design_spawn(
+                        session_id, x, y, facing=str(facing) if facing is not None else None
+                    )
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.set_exit":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    x = int(msg.get("x"))
+                    y = int(msg.get("y"))
+                    sessions.set_design_exit(session_id, x, y)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.set_surface":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    x = int(msg.get("x"))
+                    y = int(msg.get("y"))
+                    raw_surface = msg.get("surfaceType")
+                    surface = str(raw_surface) if raw_surface not in (None, "") else None
+                    sessions.set_design_surface(session_id, x, y, surface)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.set_surface_noisiness":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    surface_type = str(msg.get("surfaceType", ""))
+                    noisiness = int(msg.get("noisiness", 0))
+                    sessions.set_design_surface_noisiness(session_id, surface_type, noisiness)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.add_room_poi":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    x = int(msg.get("x"))
+                    y = int(msg.get("y"))
+                    poi_type = str(msg.get("poiType", ""))
+                    note = msg.get("note")
+                    sessions.add_design_room_poi(
+                        session_id, x, y, poi_type, str(note) if isinstance(note, str) else None
+                    )
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.add_edge_poi":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    x = int(msg.get("x"))
+                    y = int(msg.get("y"))
+                    direction = str(msg.get("dir", ""))
+                    poi_type = str(msg.get("poiType", ""))
+                    note = msg.get("note")
+                    sessions.add_design_edge_poi(
+                        session_id,
+                        x,
+                        y,
+                        direction,
+                        poi_type,
+                        str(note) if isinstance(note, str) else None,
+                    )
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.add_monster":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    sessions.add_design_monster(
+                        session_id,
+                        monster_id=str(msg.get("monsterId", "")),
+                        monster_type=str(msg.get("monsterType", "")),
+                        x=int(msg.get("x")),
+                        y=int(msg.get("y")),
+                        facing=str(msg.get("facing", "south")),
+                        perception_bonus=int(msg.get("perceptionBonus", 0)),
+                        stealth_bonus=int(msg.get("stealthBonus", 0)),
+                    )
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.update_monster":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    fields: dict[str, Any] = {}
+                    if "x" in msg:
+                        fields["x"] = int(msg.get("x"))
+                    if "y" in msg:
+                        fields["y"] = int(msg.get("y"))
+                    if "facing" in msg:
+                        fields["facing"] = str(msg.get("facing"))
+                    if "monsterType" in msg:
+                        fields["monster_type"] = str(msg.get("monsterType"))
+                    if "perceptionBonus" in msg:
+                        fields["perception_bonus"] = int(msg.get("perceptionBonus"))
+                    if "stealthBonus" in msg:
+                        fields["stealth_bonus"] = int(msg.get("stealthBonus"))
+                    sessions.update_design_monster(session_id, str(msg.get("monsterId", "")), **fields)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
+            if mtype == "gm.design.remove_monster":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    sessions.remove_design_monster(session_id, str(msg.get("monsterId", "")))
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": str(e)},
+                    )
+                continue
+
             st = sess.state
             if st is None:
                 await _send(
@@ -213,6 +449,33 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str) -> None:
                 if st.mode == "play":
                     st.paused = False
                 await _broadcast_session(session_id)
+                continue
+
+            if mtype == "gm.monster.set_goal":
+                if role != "gm":
+                    await _send(
+                        websocket,
+                        {"type": "error", "protocol": PROTOCOL_VERSION, "message": "gm only"},
+                    )
+                    continue
+                try:
+                    monster_id = str(msg.get("monsterId", ""))
+                    goal_mode = str(msg.get("goalMode", ""))
+                    raw_target = msg.get("goalTarget")
+                    goal_target: tuple[int, int] | None = None
+                    if isinstance(raw_target, list) and len(raw_target) == 2:
+                        goal_target = (int(raw_target[0]), int(raw_target[1]))
+                    sessions.set_monster_goal(session_id, monster_id, goal_mode, goal_target)
+                    await _broadcast_session(session_id)
+                except Exception as e:
+                    await _send(
+                        websocket,
+                        {
+                            "type": "error",
+                            "protocol": PROTOCOL_VERSION,
+                            "message": str(e),
+                        },
+                    )
                 continue
 
             if mtype == "player.set_stats":

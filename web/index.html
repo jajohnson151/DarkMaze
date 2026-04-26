@@ -18,40 +18,58 @@
         <button type="button" id="stats-go">Continue</button>
       </div>
       <div id="game" class="hidden">
-        <div class="frame">
-          <div id="w-top" class="wall-bar wall-h hidden"></div>
-          <div class="frame-mid">
-            <div id="w-left" class="wall-bar wall-v hidden"></div>
-            <div id="center" class="center"></div>
-            <div id="w-right" class="wall-bar wall-v hidden"></div>
+        <section class="play-layout">
+          <div id="perception-grid" class="perception-grid" aria-label="Perception sectors">
+            <div id="perception-ul" class="perception-cell perception-cell--diag"></div>
+            <div id="perception-upper" class="perception-cell"></div>
+            <div id="perception-ur" class="perception-cell perception-cell--diag"></div>
+            <div id="perception-left" class="perception-cell"></div>
+            <div id="perception-center" class="perception-cell perception-cell--center">
+              <div class="frame">
+                <div class="wall-grid" role="img" aria-label="Surroundings">
+                  <div id="corner-nw" class="wall-corner wall-corner-nw" aria-hidden="true"></div>
+                  <div id="w-top" class="wall-cell wall-bar wall-h hidden"></div>
+                  <div id="corner-ne" class="wall-corner wall-corner-ne" aria-hidden="true"></div>
+                  <div id="w-left" class="wall-cell wall-bar wall-v hidden"></div>
+                  <div id="center" class="center"></div>
+                  <div id="w-right" class="wall-cell wall-bar wall-v hidden"></div>
+                  <div id="corner-sw" class="wall-corner wall-corner-sw" aria-hidden="true"></div>
+                  <div id="w-bot" class="wall-cell wall-bar wall-h hidden"></div>
+                  <div id="corner-se" class="wall-corner wall-corner-se" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+            <div id="perception-right" class="perception-cell"></div>
+            <div id="perception-ll" class="perception-cell perception-cell--diag"></div>
+            <div id="perception-lower" class="perception-cell"></div>
+            <div id="perception-lr" class="perception-cell perception-cell--diag"></div>
           </div>
-          <div id="w-bot" class="wall-bar wall-h hidden"></div>
-        </div>
-        <div id="heard"></div>
-        <div class="actions">
-          <button type="button" data-act="turn_left">Turn L</button>
-          <button type="button" data-act="forward">Forward</button>
-          <button type="button" data-act="turn_right">Turn R</button>
-          <button type="button" data-act="wait">Wait</button>
-        </div>
-        <div class="pace">
-          <label
-            ><input type="radio" name="pace" value="cautious" /> cautious</label
-          >
-          <label
-            ><input type="radio" name="pace" value="normal" checked /> normal</label
-          >
-          <label><input type="radio" name="pace" value="fast" /> fast</label>
-        </div>
-        <div id="key-legend" class="key-legend" aria-label="Keyboard controls">
-          <strong>Keys</strong>
-          <ul>
-            <li><kbd>W</kbd> / <kbd>↑</kbd> — Forward <span class="key-hint">(pace: mouse)</span></li>
-            <li><kbd>A</kbd> / <kbd>←</kbd> — Turn left</li>
-            <li><kbd>D</kbd> / <kbd>→</kbd> — Turn right</li>
-            <li><kbd>Space</kbd> — Wait</li>
-          </ul>
-        </div>
+          <section class="controls-area">
+            <div class="actions">
+              <button type="button" data-act="turn_left">Turn left</button>
+              <button type="button" data-act="forward">Forward</button>
+              <span class="pace-inline">
+                <label><input type="radio" name="pace" value="cautious" /> Cautious</label>
+                <label><input type="radio" name="pace" value="normal" checked /> Normal</label>
+                <label><input type="radio" name="pace" value="fast" /> Fast</label>
+              </span>
+              <button type="button" data-act="turn_right">Turn right</button>
+              <button type="button" data-act="wait">Wait</button>
+            </div>
+          </section>
+          <section class="info-area">
+            <div id="key-legend" class="key-legend" aria-label="Keyboard controls">
+              <strong>Keys</strong>
+              <ul>
+                <li><kbd>W</kbd> / <kbd>↑</kbd> — Forward</li>
+                <li><kbd>A</kbd> / <kbd>←</kbd> — Turn left</li>
+                <li><kbd>D</kbd> / <kbd>→</kbd> — Turn right</li>
+                <li><kbd>Space</kbd> — Wait</li>
+              </ul>
+            </div>
+            <div id="selected-stats" class="panel selected-stats"></div>
+          </section>
+        </section>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

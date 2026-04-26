@@ -6,6 +6,7 @@ from typing import Literal
 from game.maze import Facing
 
 RollMode = Literal["normal", "advantage", "disadvantage"]
+MonsterGoalMode = Literal["catch_player", "find_bones", "return_start"]
 
 
 @dataclass
@@ -29,6 +30,10 @@ class Actor:
     stealth_roll_mode: RollMode = "normal"
     action_pool: int = 0
     monster_type_id: str | None = None
+    goal_mode: MonsterGoalMode = "catch_player"
+    goal_target: tuple[int, int] | None = None
+    spawn_x: int | None = None
+    spawn_y: int | None = None
     explored_cells: set[tuple[int, int]] = field(default_factory=set)
     last_sound_hint: tuple[int, int] | None = None
     partial_action_remaining: int = 0

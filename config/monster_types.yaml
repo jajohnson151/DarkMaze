@@ -1,0 +1,13 @@
+monster_types:
+  default:
+    phrases:
+    - rustle
+    maze_proficiency: 0.5
+    sound_homing: 0.5
+  skeleton:
+    phrases:
+    - rattle
+    - dry scrape
+    - clatter
+    maze_proficiency: 0.2
+    sound_homing: 0.85

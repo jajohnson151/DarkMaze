@@ -38,6 +38,7 @@ def build_maze_from_template(data: dict[str, Any]) -> Maze:
                             w=bool(spec.get("w", False)),
                             hazard=spec.get("hazard"),
                             item=spec.get("item"),
+                            surface_type=spec.get("surface_type"),
                             is_exit=bool(spec.get("exit", False)),
                         )
                     )
@@ -91,6 +92,10 @@ def build_actors(data: dict[str, Any], maze: Maze) -> tuple[Actor, list[Actor]]:
                 perception_roll_mode=m.get("perception_roll_mode", "normal"),
                 stealth_roll_mode=m.get("stealth_roll_mode", "normal"),
                 monster_type_id=mt,
+                goal_mode=str(m.get("goal_mode", "catch_player")),  # type: ignore[arg-type]
+                goal_target=tuple(m["goal_target"]) if isinstance(m.get("goal_target"), list) and len(m.get("goal_target")) == 2 else None,
+                spawn_x=int(mx),
+                spawn_y=int(my),
             )
         )
         monsters[-1].note_enter_cell(monsters[-1].x, monsters[-1].y)
@@ -134,6 +139,8 @@ def maze_to_template_grid(maze: Maze) -> list[list[dict[str, Any]]]:
                 cell["hazard"] = c.hazard
             if c.item:
                 cell["item"] = c.item
+            if c.surface_type:
+                cell["surface_type"] = c.surface_type
             if c.is_exit:
                 cell["exit"] = True
             row.append(cell)
@@ -152,6 +159,12 @@ def minimal_template_dict(width: int, height: int) -> dict[str, Any]:
         "exit": [max(0, width - 1), max(0, height - 1)],
         "monster_types": {},
         "monsters": [],
+        "surface_types": {
+            "smooth stone": {"noisiness": 0},
+            "dirt": {"noisiness": 1},
+            "crunchy gravel": {"noisiness": 2},
+            "standing water": {"noisiness": 3},
+        },
     }
 
 
@@ -168,6 +181,9 @@ def validate_template_data(data: dict[str, Any]) -> None:
     for m in monsters:
         if m.monster_type_id not in (data.get("monster_types") or {}):
             raise ValueError(f"monster {m.id} unknown type {m.monster_type_id}")
+    ids = [m.id for m in monsters]
+    if len(ids) != len(set(ids)):
+        raise ValueError("duplicate monster ids")
 
 
 def validate_template(path: Path | str) -> None:

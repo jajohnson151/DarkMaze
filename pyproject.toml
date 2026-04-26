@@ -21,9 +21,10 @@ dev = ["pytest>=7.4.0", "httpx>=0.26.0", "ruff>=0.1.0"]
 
 [project.scripts]
 darkmaze = "cli.main:main"
+darkmaze-designer = "designer.app:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["game", "server", "cli"]
+packages = ["game", "server", "cli", "designer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

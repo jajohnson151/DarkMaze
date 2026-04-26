@@ -44,6 +44,18 @@ class PlayerView(BaseModel):
     hazard: str | None = None
     item: str | None = None
     pending_heard_cues: list[HeardCueModel] = Field(default_factory=list, alias="pendingHeardCues")
+    heard_buckets: dict[str, list[str]] = Field(
+        default_factory=dict,
+        alias="heardBuckets",
+        description="Directional perceived sounds by relative sectors.",
+    )
+    edge_poi_buckets: dict[str, list[str]] = Field(
+        default_factory=dict,
+        alias="edgePoiBuckets",
+        description="Directional edge POIs by cardinal relative sectors.",
+    )
+    center_surface: str | None = Field(None, alias="centerSurface")
+    center_room_pois: list[str] = Field(default_factory=list, alias="centerRoomPois")
     game_over: str | None = Field(None, alias="gameOver")
 
     model_config = {"populate_by_name": True}
@@ -56,6 +68,20 @@ class GMMonsterView(BaseModel):
     facing: str
     action_pool: int = Field(alias="actionPool")
     monster_type_id: str | None = Field(None, alias="monsterTypeId")
+    goal_mode: str = Field("catch_player", alias="goalMode")
+    goal_target: list[int] | None = Field(None, alias="goalTarget")
+
+
+class MonsterMirrorView(BaseModel):
+    """GM-only: walls and heard cues from a monster’s cell and facing (like player view, no coords)."""
+
+    id: str
+    walls: WallMask
+    hazard: str | None = None
+    item: str | None = None
+    pending_heard_cues: list[HeardCueModel] = Field(default_factory=list, alias="pendingHeardCues")
+
+    model_config = {"populate_by_name": True}
 
 
 class GMView(BaseModel):
@@ -71,6 +97,7 @@ class GMView(BaseModel):
     monsters: list[GMMonsterView]
     exit_cell: tuple[int, int] = Field(alias="exitCell")
     last_hear_debug: list[dict[str, Any]] = Field(default_factory=list, alias="lastHearDebug")
+    monster_mirrors: list[MonsterMirrorView] = Field(default_factory=list, alias="monsterMirrors")
 
     model_config = {"populate_by_name": True}
 
